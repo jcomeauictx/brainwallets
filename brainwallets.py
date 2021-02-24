@@ -103,12 +103,12 @@ def check_match(addresslist, address, private_key, keyword, hashcount):
             except ValueError:
                 logging.error('Skipping malformed line %r', line.rstrip())
             if address == btcaddress:
-                logging.warning('Found match for %s', address)
+                logging.warning('Found match for %s at %s', keyword, address)
                 print(','.join(
                     [keyword, hashcount, address, private_key, satoshis]
-                ))
+                ), flush=True)
                 return
-    logging.warning('No actual match found for %s', address)
+    logging.warning('No actual match found for %s at %s', keyword, address)
 
 if __name__ == '__main__':
     if not len(sys.argv) > 3:
