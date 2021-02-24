@@ -32,9 +32,11 @@ def generate_private_and_public_keys(secret, repeat):
     signing_key = ecdsa.SigningKey.from_string(secret, curve=ecdsa.SECP256k1)
     verifying_key = signing_key.verifying_key
     public_key = '04' + verifying_key.to_string().hex()
-    return signing_key.to_string().hex(), public_key
+    private_key = b'\x80' + signing_key.to_string()
+    wifkey = base58.b58encode(private_key + sha256d(private_key)[:4])
+    return wifkey.decode('ascii'), public_key
 
-def get_wif_public_key(public_key):
+def get_address(public_key):
     '''
     return public key in Wallet Import Format (WIF)
     '''
@@ -53,9 +55,9 @@ def get_keys(secret, repeat=1):
     private_key, public_key = generate_private_and_public_keys(secret, repeat)
     #logging.debug('Private_key: %s', private_key)
     #logging.debug('Public key: %s', public_key)
-    wif = get_wif_public_key(public_key)
+    address = get_address(public_key).decode('ascii')
     #logging.debug('Bitcoin address: %s', wif)
-    return wif.decode('ascii'), private_key
+    return address, private_key
 
 def sha256d(data, reps=2):
     '''
