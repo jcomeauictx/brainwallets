@@ -96,7 +96,10 @@ def check_match(addresslist, address, private_key, keyword, hashcount):
     '''
     with open(addresslist) as infile:
         for line in infile:
-            btcaddress, satoshis, suffix = line.split(',')
+            try:
+                btcaddress, satoshis, suffix = line.split(',')
+            except ValueError:
+                logging.error('Skipping malformed line %r', line.rstrip())
             if address == btcaddress:
                 print(','.join(
                     [keyword, hashcount, address, private_key, satoshis]
