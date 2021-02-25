@@ -16,9 +16,9 @@ def generate_private_and_public_keys(secret, repeat):
     >>> generate_private_and_public_keys(
     ... '0C28FCA386C7A227600B2FE50B7CAE11'
     ... 'EC86D3BF1FBE471BE89827E19D72AA1D', 1)[0]
-    '0c28fca386c7a227600b2fe50b7cae11ec86d3bf1fbe471be89827e19d72aa1d'
+    '5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ'
     >>> generate_private_and_public_keys('satoshi nakamoto', 1)[0]
-    'aa2d3c4a4ae6559e9f13f093cc6e32459c5249da723de810651b4b54373385e2'
+    '5K7EWwEuJu9wPi4q7HmWQ7xgv8GxZ2KqkFbjYMGvTCXmY22oCbr'
     '''
     try:
         if len(secret) != 64:

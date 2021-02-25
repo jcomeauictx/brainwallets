@@ -30,6 +30,9 @@ TEST_VECTORS = [
 def encode(bytestring):
     '''
     Base58 encode bytstring
+
+    >>> [encode(a) == b for a, b in TEST_VECTORS]
+    [True, True, True, True, True]
     '''
     cleaned = bytestring.lstrip(b'\0')
     padding = BASE58[0:1] * (len(bytestring) - len(cleaned))
@@ -44,6 +47,9 @@ def encode(bytestring):
 def decode(bytestring):
     '''
     Base58 decode bytestring
+
+    >>> [decode(b) == a for a, b in TEST_VECTORS]
+    [True, True, True, True, True]
     '''
     cleaned = bytestring.lstrip(BASE58[0:1])
     number, decoded = 0, bytearray()

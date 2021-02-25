@@ -5,6 +5,7 @@ FOUND ?= foundkeys.txt
 # $(SUFFIXES) is a GNU Makefile builtin, don't use it!
 BTCSUFFIXES ?= BTC btc Bitcoin bitcoin Bitcoins bitcoins
 QUIET ?= -OO
+SCRIPTS := $(wildcard *.py)
 brainwallets: brainwallets.py
 	python3 $(QUIET) $< $(TRIES) $(BALANCES) $(WORDS) $(BTCSUFFIXES) | \
 	 tee >> $(FOUND)
@@ -15,3 +16,6 @@ testbalances.csv: $(BALANCES)
 testwords.txt:
 	echo satoshi nakamoto >> $@  # was emptied by a miner some time ago
 	echo password >> $@  # still contains 546 satoshis 2021-02-23
+%.py.doctest: %.py
+	python3 -m doctest $<
+doctests: $(SCRIPTS:.py=.py.doctest)
