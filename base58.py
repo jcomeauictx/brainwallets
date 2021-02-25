@@ -27,13 +27,19 @@ TEST_VECTORS = [
     [b'\x00\x00\x28\x7f\xb4\xcd', b'11233QC4'],
 ]
 
-def encode(bytestring):
+def encode(bytestring=None):
     '''
     Base58 encode bytstring
 
     >>> [encode(a) == b for a, b in TEST_VECTORS]
     [True, True, True, True, True]
     '''
+    if bytestring is None:
+        logging.debug('no arg, attempting to read bytes from stdin')
+        bytestring = getattr(sys.stdin, 'buffer', sys.stdin).read()
+    elif not isinstance(bytestring, bytes):
+        bytestring = bytes(bytestring.encode())
+    logging.debug('base58 encoding %r...', bytestring[:64])
     cleaned = bytestring.lstrip(b'\0')
     padding = BASE58[0:1] * (len(bytestring) - len(cleaned))
     number, unencoded, encoded = 0, bytearray(bytestring), bytearray()
@@ -44,13 +50,19 @@ def encode(bytestring):
         encoded.append(BASE58[remainder])
     return (bytes(encoded) + padding)[::-1]
 
-def decode(bytestring):
+def decode(bytestring=None):
     '''
     Base58 decode bytestring
 
     >>> [decode(b) == a for a, b in TEST_VECTORS]
     [True, True, True, True, True]
     '''
+    if bytestring is None:
+        logging.debug('no arg, attempting to read bytes from stdin')
+        bytestring = getattr(sys.stdin, 'buffer', sys.stdin).read()
+    elif not isinstance(bytestring, bytes):
+        bytestring = bytes(bytestring.encode())
+    logging.debug('base58 decoding %r...', bytestring[:64])
     cleaned = bytestring.lstrip(BASE58[0:1])
     number, decoded = 0, bytearray()
     for byte in cleaned:
@@ -62,16 +74,14 @@ def decode(bytestring):
     return bytes(decoded)[::-1]
 
 if __name__ == '__main__':
-    for decoded, encoded in TEST_VECTORS:
-        logging.debug('checking encoding of %r', decoded)
-        check = encode(decoded)
-        if check != encoded:
-            logging.error('%r does not match %r', check, encoded)
-    for decoded, encoded in TEST_VECTORS:
-        logging.debug('checking decoding of %r', encoded)
-        check = decode(encoded)
-        if check != decoded:
-            logging.error('%r does not match %r', check, decoded)
+    if len(sys.argv) < 2:
+        sys.stderr.write('Must specify action: "encode" or "decode"\r\n')
+        sys.exit(1)
+    elif sys.argv[1] not in ('encode', 'decode'):
+        sys.stderr.write('Unknown action %s\r\n' % sys.argv[1])
+        sys.exit(2)
+    getattr(sys.stdout, 'buffer', sys.stdout).write(
+        eval(sys.argv[1])(' '.join(sys.argv[2:]) if sys.argv[2:] else None))
 else:
     # imported by other programs which expect pip-installed base58
     (b58encode, b58decode) = (encode, decode)
