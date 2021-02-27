@@ -36,7 +36,7 @@ def generate_private_and_public_keys(secret, repeat):
     public_key = b'04' + hexlify(verifying_key.to_string())
     private_key = b'\x80' + signing_key.to_string()
     wifkey = base58.b58encode(private_key + sha256d(private_key)[:4])
-    return wifkey.decode('ascii'), public_key
+    return wifkey.decode(), public_key
 
 def get_address(public_key):
     '''
@@ -44,7 +44,7 @@ def get_address(public_key):
     '''
     ripemd160 = hashlib.new('ripemd160')
     ripemd160.update(sha256d(unhexlify(public_key), 1))
-    prefix = '00' + hexlify(ripemd160.digest())
+    prefix = b'00' + hexlify(ripemd160.digest())
     checksum = sha256d(unhexlify(prefix), 2)[0:4]
     binary_addr = prefix + hexlify(checksum)
     return base58.b58encode(unhexlify(binary_addr))
@@ -57,7 +57,7 @@ def get_keys(secret, repeat=1):
     private_key, public_key = generate_private_and_public_keys(secret, repeat)
     #logging.debug('Private_key: %s', private_key)
     #logging.debug('Public key: %s', public_key)
-    address = get_address(public_key).decode('ascii')
+    address = get_address(public_key)
     #logging.debug('Bitcoin address: %s', wif)
     return address, private_key
 
@@ -117,7 +117,10 @@ def show(result):
     flush output so that tail -f on the output file shows results in real time
     '''
     string = ' '.join(result)
-    print(result, flush=True)
+    try:
+        print(string, flush=True)
+    except TypeError:  # python2 doesn't support "flush"
+        print(string)
 
 if __name__ == '__main__':
     if not len(sys.argv) > 3:

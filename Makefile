@@ -5,12 +5,13 @@ FOUND ?= foundkeys.txt
 # $(SUFFIXES) is a GNU Makefile builtin, don't use it!
 BTCSUFFIXES ?= BTC btc Bitcoin bitcoin Bitcoins bitcoins
 QUIET ?= -OO
+PYTHON ?= python3
 SCRIPTS := $(wildcard *.py)
 brainwallets: brainwallets.py
-	python3 $(QUIET) $< $(TRIES) $(BALANCES) $(WORDS) $(BTCSUFFIXES) | \
+	$(PYTHON) $(QUIET) $< $(TRIES) $(BALANCES) $(WORDS) $(BTCSUFFIXES) | \
 	 tee >> $(FOUND)
 test: brainwallets.py testwords.txt testbalances.csv
-	$(MAKE) WORDS=testwords.txt BALANCES=testbalances.csv brainwallets
+	$(MAKE) WORDS=testwords.txt BALANCES=testbalances.csv TRIES=1
 testbalances.csv: $(BALANCES)
 	grep '^16ga2uqn' $< > $@
 testwords.txt:
