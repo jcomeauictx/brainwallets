@@ -16,6 +16,9 @@ testbalances.csv: $(BALANCES)
 testwords.txt:
 	echo satoshi nakamoto >> $@  # was emptied by a miner some time ago
 	echo password >> $@  # still contains 546 satoshis 2021-02-23
+%.py.doctest2: %.py
+	python -m doctest $<
+doctests2: $(SCRIPTS:.py=.py.doctest2)
 %.py.doctest: %.py
 	python3 -m doctest $<
 doctests: $(SCRIPTS:.py=.py.doctest)

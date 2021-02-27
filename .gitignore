@@ -1,4 +1,6 @@
 testbalances.csv
 testwords.txt
 foundkeys.txt
+*.pyc
+*.pyo
 __pycache__
