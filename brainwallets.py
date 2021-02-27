@@ -4,7 +4,9 @@ generate Bitcoin addresses from wordlists, and check the balance of each
 
 use csv balances file created by btcposbal2csv
 '''
+from __future__ import print_function
 import sys, os, hashlib, ecdsa, base58, re, logging
+from binascii import unhexlify, hexlify  # reliable across most Python versions
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.WARN)
 
 def generate_private_and_public_keys(secret, repeat):
@@ -23,7 +25,7 @@ def generate_private_and_public_keys(secret, repeat):
     try:
         if len(secret) != 64:
             raise TypeError('not a sha256 hash')
-        secret = bytes.fromhex(secret)
+        secret = unhexlify(secret)
         # since we're not hashing the key, let's hash one less than repeat
         secret = sha256d(secret, reps=repeat - 1)
     except TypeError:
@@ -31,7 +33,7 @@ def generate_private_and_public_keys(secret, repeat):
         secret = sha256d(secret.encode(), reps=repeat)
     signing_key = ecdsa.SigningKey.from_string(secret, curve=ecdsa.SECP256k1)
     verifying_key = signing_key.verifying_key
-    public_key = '04' + verifying_key.to_string().hex()
+    public_key = b'04' + hexlify(verifying_key.to_string())
     private_key = b'\x80' + signing_key.to_string()
     wifkey = base58.b58encode(private_key + sha256d(private_key)[:4])
     return wifkey.decode('ascii'), public_key
@@ -41,11 +43,11 @@ def get_address(public_key):
     return public key in Wallet Import Format (WIF)
     '''
     ripemd160 = hashlib.new('ripemd160')
-    ripemd160.update(sha256d(bytes.fromhex(public_key), 1))
-    prefix = '00' + ripemd160.digest().hex()
-    checksum = sha256d(bytes.fromhex(prefix), 2)[0:4]
-    binary_addr = prefix + checksum.hex()
-    return base58.b58encode(bytes.fromhex(binary_addr))
+    ripemd160.update(sha256d(unhexlify(public_key), 1))
+    prefix = '00' + hexlify(ripemd160.digest())
+    checksum = sha256d(unhexlify(prefix), 2)[0:4]
+    binary_addr = prefix + hexlify(checksum)
+    return base58.b58encode(unhexlify(binary_addr))
 
 def get_keys(secret, repeat=1):
     '''
@@ -63,7 +65,7 @@ def sha256d(data, reps=2):
     '''
     get sha256, sha256d, or any number of repeated hashes of any arbitrary data
     '''
-    logging.debug('getting sha256 digest for %s, count=%d', data, reps)
+    logging.debug('getting sha256 digest for %r, count=%d', data, reps)
     for count in range(reps):
         sha256 = hashlib.sha256(data)
         logging.debug('result %d: %s', count, sha256.hexdigest())
@@ -104,11 +106,18 @@ def check_match(addresslist, address, private_key, keyword, hashcount):
                 logging.error('Skipping malformed line %r', line.rstrip())
             if address == btcaddress:
                 logging.warning('Found match for %s at %s', keyword, address)
-                print(','.join(
-                    [keyword, hashcount, address, private_key, satoshis]
-                ), flush=True)
+                show([keyword, hashcount, address, private_key, satoshis])
                 return
     logging.warning('No actual match found for %s at %s', keyword, address)
+
+def show(result):
+    '''
+    print result as space-separated string.
+
+    flush output so that tail -f on the output file shows results in real time
+    '''
+    string = ' '.join(result)
+    print(result, flush=True)
 
 if __name__ == '__main__':
     if not len(sys.argv) > 3:

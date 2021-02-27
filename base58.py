@@ -12,6 +12,7 @@ as a basis.
 Copyright (C) 2021 jc@unternet.net
 '''
 import sys, os, logging
+from binascii import hexlify, unhexlify  # works on most versions of Python
 
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.WARN)
 
@@ -42,10 +43,7 @@ def encode(bytestring=None, from_hex=False):
     elif not isinstance(bytestring, bytes):
         bytestring = bytes(bytestring.encode())
     if from_hex:
-        try:
-            bytestring = bytes.fromhex(bytestring.decode())
-        except AttributeError:
-            bytestring = bytestring.decode('hex')
+        bytestring = unhexlify(bytestring)
     logging.debug('base58 encoding %r...', bytestring[:64])
     cleaned = bytestring.lstrip(b'\0')
     padding = BASE58[0:1] * (len(bytestring) - len(cleaned))
@@ -63,7 +61,7 @@ def decode(bytestring=None, to_hex=False):
 
     >>> [decode(b) == a for a, b in TEST_VECTORS]
     [True, True, True, True, True]
-    >>> decode('C3CPq7c8PY', True).encode() == b'0123456789abcdef'
+    >>> decode('C3CPq7c8PY', True) == b'0123456789abcdef'
     True
     '''
     if bytestring is None:
@@ -75,17 +73,17 @@ def decode(bytestring=None, to_hex=False):
     cleaned = bytestring.lstrip(BASE58[0:1])
     number, decoded = 0, bytearray()
     for byte in cleaned:
-        number = (number * 58) + BASE58.index(byte)
+        try:
+            number = (number * 58) + BASE58.index(byte)
+        except TypeError:  # python3.1 bytearray doesn't implement buffer
+            number = (number * 58) + list(BASE58).index(byte)
     while number:
         decoded.append(number % 256)
         number >>= 8
     decoded += b'\0' * (len(bytestring) - len(cleaned))
     decoded = bytes(decoded)[::-1]
     if to_hex:
-        try:
-            decoded = decoded.encode('hex')
-        except AttributeError:
-            decoded = decoded.hex()
+        decoded = hexlify(decoded)
     return decoded
 
 if __name__ == '__main__':
