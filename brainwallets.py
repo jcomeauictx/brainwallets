@@ -15,11 +15,11 @@ def generate_private_and_public_keys(secret, repeat):
 
     otherwise, generate sha256 hash and use that instead
 
-    >>> plainstring(generate_private_and_public_keys(
+    >>> generate_private_and_public_keys(
     ... '0C28FCA386C7A227600B2FE50B7CAE11'
-    ... 'EC86D3BF1FBE471BE89827E19D72AA1D', 1)[0])
+    ... 'EC86D3BF1FBE471BE89827E19D72AA1D', 1)[0]
     '5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ'
-    >>> plainstring(generate_private_and_public_keys('satoshi nakamoto', 1)[0])
+    >>> generate_private_and_public_keys('satoshi nakamoto', 1)[0]
     '5K7EWwEuJu9wPi4q7HmWQ7xgv8GxZ2KqkFbjYMGvTCXmY22oCbr'
     '''
     try:
@@ -36,7 +36,7 @@ def generate_private_and_public_keys(secret, repeat):
     public_key = b'04' + hexlify(verifying_key.to_string())
     private_key = b'\x80' + signing_key.to_string()
     wifkey = base58.b58encode(private_key + sha256d(private_key)[:4])
-    return wifkey.decode(), public_key
+    return plainstring(wifkey), public_key
 
 def plainstring(string):
     '''
@@ -45,9 +45,9 @@ def plainstring(string):
     just for making doctests pass regardless of python version. string
     must be ASCII.
     '''
-    if repr(string).startswith('b'):
+    if repr(string).startswith("b'"):  # only python3 doess this
         return string.decode()
-    elif repr(string).startswith('u'):
+    elif repr(string).startswith("u'"):  # only python2 does this
         return string.encode()
     else:
         return string
@@ -95,7 +95,8 @@ def guess(repeatcount, addresslist, wordlists, suffixes):
     with open(addresslist, 'r') as infile:
         for line in infile:
             if line.startswith('1'):
-                prefixes.add(line[:8])
+                prefixes.add(line[1:9])
+    logging.debug('prefixes: %s', list(prefixes)[:10])
     for wordlist in wordlists:
         with open(wordlist, 'r') as infile:
             for word in infile:
@@ -103,8 +104,8 @@ def guess(repeatcount, addresslist, wordlists, suffixes):
                     keyword = (' '.join((word.rstrip(), suffix))).strip()
                     for repetitions in range(1, repeatcount + 1):
                         address, private_key = get_keys(keyword, repetitions)
-                        if address[:8] in prefixes:
-                            logging.warning('Found %s in prefixes', address[:8])
+                        if address[1:9] in prefixes:
+                            logging.warning('Found %s in prefixes', address[:9])
                             check_match(addresslist, address, private_key,
                                         keyword, str(repetitions))
 
