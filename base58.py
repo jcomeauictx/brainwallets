@@ -27,18 +27,25 @@ TEST_VECTORS = [
     [b'\x00\x00\x28\x7f\xb4\xcd', b'11233QC4'],
 ]
 
-def encode(bytestring=None):
+def encode(bytestring=None, from_hex=False):
     '''
     Base58 encode bytstring
 
     >>> [encode(a) == b for a, b in TEST_VECTORS]
     [True, True, True, True, True]
+    >>> encode('0123456789abcdef', True).decode() == 'C3CPq7c8PY'
+    True
     '''
     if bytestring is None:
         logging.debug('no arg, attempting to read bytes from stdin')
         bytestring = getattr(sys.stdin, 'buffer', sys.stdin).read()
     elif not isinstance(bytestring, bytes):
         bytestring = bytes(bytestring.encode())
+    if from_hex:
+        try:
+            bytestring = bytes.fromhex(bytestring.decode())
+        except AttributeError:
+            bytestring = bytestring.decode('hex')
     logging.debug('base58 encoding %r...', bytestring[:64])
     cleaned = bytestring.lstrip(b'\0')
     padding = BASE58[0:1] * (len(bytestring) - len(cleaned))
@@ -50,12 +57,14 @@ def encode(bytestring=None):
         encoded.append(BASE58[remainder])
     return (bytes(encoded) + padding)[::-1]
 
-def decode(bytestring=None):
+def decode(bytestring=None, to_hex=False):
     '''
     Base58 decode bytestring
 
     >>> [decode(b) == a for a, b in TEST_VECTORS]
     [True, True, True, True, True]
+    >>> decode('C3CPq7c8PY', True).encode() == b'0123456789abcdef'
+    True
     '''
     if bytestring is None:
         logging.debug('no arg, attempting to read bytes from stdin')
@@ -71,7 +80,13 @@ def decode(bytestring=None):
         decoded.append(number % 256)
         number >>= 8
     decoded += b'\0' * (len(bytestring) - len(cleaned))
-    return bytes(decoded)[::-1]
+    decoded = bytes(decoded)[::-1]
+    if to_hex:
+        try:
+            decoded = decoded.encode('hex')
+        except AttributeError:
+            decoded = decoded.hex()
+    return decoded
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
