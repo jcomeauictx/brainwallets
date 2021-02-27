@@ -15,11 +15,11 @@ def generate_private_and_public_keys(secret, repeat):
 
     otherwise, generate sha256 hash and use that instead
 
-    >>> generate_private_and_public_keys(
+    >>> plainstring(generate_private_and_public_keys(
     ... '0C28FCA386C7A227600B2FE50B7CAE11'
-    ... 'EC86D3BF1FBE471BE89827E19D72AA1D', 1)[0]
+    ... 'EC86D3BF1FBE471BE89827E19D72AA1D', 1)[0])
     '5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ'
-    >>> generate_private_and_public_keys('satoshi nakamoto', 1)[0]
+    >>> plainstring(generate_private_and_public_keys('satoshi nakamoto', 1)[0])
     '5K7EWwEuJu9wPi4q7HmWQ7xgv8GxZ2KqkFbjYMGvTCXmY22oCbr'
     '''
     try:
@@ -37,6 +37,20 @@ def generate_private_and_public_keys(secret, repeat):
     private_key = b'\x80' + signing_key.to_string()
     wifkey = base58.b58encode(private_key + sha256d(private_key)[:4])
     return wifkey.decode(), public_key
+
+def plainstring(string):
+    '''
+    make sure string representation doesn't start with b or u
+
+    just for making doctests pass regardless of python version. string
+    must be ASCII.
+    '''
+    if repr(string).startswith('b'):
+        return string.decode()
+    elif repr(string).startswith('u'):
+        return string.encode()
+    else:
+        return string
 
 def get_address(public_key):
     '''
