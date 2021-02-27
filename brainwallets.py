@@ -73,7 +73,7 @@ def get_keys(secret, repeat=1):
     #logging.debug('Public key: %s', public_key)
     address = get_address(public_key)
     #logging.debug('Bitcoin address: %s', wif)
-    return address, private_key
+    return plainstring(address), private_key
 
 def sha256d(data, reps=2):
     '''
